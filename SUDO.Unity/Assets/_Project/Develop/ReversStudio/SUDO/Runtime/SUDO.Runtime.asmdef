@@ -1,0 +1,19 @@
+{
+    "name": "SUDO.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "SUDO.Shared",
+        "SUDO.Backend",
+        "UniTask",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

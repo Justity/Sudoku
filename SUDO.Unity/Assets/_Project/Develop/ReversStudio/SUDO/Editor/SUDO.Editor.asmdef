@@ -1,0 +1,21 @@
+{
+    "name": "SUDO.Editor",
+    "rootNamespace": "",
+    "references": [
+        "SUDO.Editor",
+        "SUDO.Backend",
+        "SUDO.Shared"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "QNX"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
