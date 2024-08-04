@@ -2,7 +2,6 @@
     "name": "SUDO.Editor",
     "rootNamespace": "",
     "references": [
-        "SUDO.Editor",
         "SUDO.Backend",
         "SUDO.Shared"
     ],

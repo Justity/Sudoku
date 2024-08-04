@@ -5,7 +5,8 @@
         "SUDO.Shared",
         "SUDO.Backend",
         "UniTask",
-        "VContainer"
+        "VContainer",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
