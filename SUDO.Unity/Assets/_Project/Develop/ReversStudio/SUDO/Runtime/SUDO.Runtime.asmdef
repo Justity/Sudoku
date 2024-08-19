@@ -6,7 +6,10 @@
         "SUDO.Backend",
         "UniTask",
         "VContainer",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "DOTween.Modules",
+        "DOTweenPro.EditorScripts",
+        "DOTweenPro.Scripts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

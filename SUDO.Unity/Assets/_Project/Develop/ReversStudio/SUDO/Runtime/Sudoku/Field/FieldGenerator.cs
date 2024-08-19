@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = System.Random;
 
@@ -25,6 +26,12 @@ namespace ReversStudio.SUDO.Runtime.Sudoku.Field
 
         private int[,] _field;
 
+        private FieldVerifier _fieldVerifier;
+
+        public void Init(FieldVerifier fieldVerifier)
+        {
+            _fieldVerifier = fieldVerifier;
+        }
     
         public int[,] GenerateField()
         {
@@ -52,9 +59,12 @@ namespace ReversStudio.SUDO.Runtime.Sudoku.Field
                         break;
                 }
             }
+            
+            FieldVerifier fieldVerifier = new FieldVerifier();
+            Debug.Log(fieldVerifier.FieldIsCorrect(_field));
 
-            FieldIsCorrect();
-        
+            RemoveCellsAndCheck(_field,40);
+            
             return _field;
         }
 
@@ -160,86 +170,211 @@ namespace ReversStudio.SUDO.Runtime.Sudoku.Field
                 }
             }
         }
-
-        private void DeleteNumbersFromField()
-        {
-            
-        }
-
-        private int SolveSudoku()
-        {
-            int steps = 0;
-
-            
-            
-            return steps;
-        }
         
-        private bool FieldIsCorrect()
+        private int[,] CellsRemover(int removeQuantity)
         {
-            // rows check
-            for (int k = 0; k < 9; k++)
+            int[,] tempField = _field;
+            int x = random.Next(0, 9);
+            int y = random.Next(0, 9);
+
+            tempField[y, x] = -1;
+
+            for (int i = 0; i < removeQuantity; i++)
             {
-                for (int i = 0; i < 9; i++)
+                if (GetMissedCellsInBox(x, y, tempField) == 0)
                 {
-                    int selectedNumber = _field[k, i];
-                    for (int j = 0; j < 9; j++)
-                    {
-                        if (j!=i && selectedNumber == _field[k, j])
-                        {
-                            Debug.Log("поле неверно");
-                            return false;
-                        }
-                    }
-                }    
+                    
+                }
             }
 
-            // column check
-            for (int k = 0; k < 9; k++)
+
+
+
+
+
+            return tempField;
+        }
+
+        private int GetMissedCellsInBox(int x, int y, int[,] tempField)
+        {
+            int count = 0;
+
+            if (x >= 6)
             {
-                for (int i = 0; i < 9; i++)
-                {
-                    int selectedNumber = _field[i, k];
-                    for (int j = 0; j < 9; j++)
-                    {
-                        if (j!=i && selectedNumber == _field[j, k])
-                        {
-                            Debug.Log("поле неверно");
-                            return false;
-                        }
-                    }
-                }    
+                x = 6;
             }
-        
-            // box check
-            for (int a = 0; a < 7; a+=3)
+            else
             {
-                for (int b = 0; b < 7; b+=3)
+                if (x >= 3)
                 {
-                    for (int i = 0; i < 3; i++)
+                    x = 3;
+                }
+                else
+                {
+                    if (x >= 0) x = 0;
+                }
+            }
+            
+            
+            if (y >= 6)
+            {
+                y = 6;
+            }
+            else
+            {
+                if (y >= 3)
+                {
+                    y = 3;
+                }
+                else
+                {
+                    if (y >= 0) y = 0;
+                }
+            }
+            
+            for (int i = y; i < y+3; i++)
+            {
+                for (int j = x; j < x+3; j++)
+                {
+                    if (tempField[i, j] == -1)
                     {
-                        for (int j = 0; j < 3; j++)
-                        {
-                            int selectedNumber = _field[i+a, j+b];
-                            for (int l = 0; l < 3; l++)
-                            {
-                                for (int m = 0; m < 3; m++)
-                                {
-                                    if (l != i | m != j)
-                                    {
-                                        if (selectedNumber == _field[l+a, m+b])
-                                        {
-                                            Debug.Log("поле неверно");
-                                            return false;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }                      
+                        count++;
+                    }
+                }
+            }
+            Debug.Log(count);
+            return count;
+        }
+        
+        
+        // Метод для удаления клеток и проверки решаемости
+        public void RemoveCellsAndCheck(int[,] board, int cellsToRemove)
+        {
+            int size = board.GetLength(0);
+            List<(int, int, int)> removedCells = new List<(int, int, int)>();
+
+            for (int i = 0; i < cellsToRemove; i++)
+            {
+                int row, col;
+                do
+                {
+                    row = random.Next(size);
+                    col = random.Next(size);
+                }
+                while (board[row, col] == 0);
+
+                int temp = board[row, col];
+                board[row, col] = 0;
+                removedCells.Add((row, col, temp));
+
+                // Если после удаления клеток Судоку не решаемо, возвращаем клетку назад
+                if (!IsSolvable(board))
+                {
+                    board[row, col] = temp;
+                    removedCells.RemoveAt(removedCells.Count - 1);
+                }
+            }
+        }
+
+        // Метод для проверки решаемости доски Судоку
+        private static bool IsSolvable(int[,] board)
+        {
+            int size = board.GetLength(0);
+            int[,] boardCopy = (int[,])board.Clone();
+            return Solve(boardCopy) && !HasMultipleSolutions(boardCopy);
+        }
+
+        // Решение Судоку методом Backtracking
+        private static bool Solve(int[,] board)
+        {
+            int row = -1;
+            int col = -1;
+            bool isEmpty = true;
+            int size = board.GetLength(0);
+
+            for (int i = 0; i < size; i++)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    if (board[i, j] == 0)
+                    {
+                        row = i;
+                        col = j;
+                        isEmpty = false;
+                        break;
+                    }
+                }
+                if (!isEmpty) break;
+            }
+
+            if (isEmpty) return true;
+
+            for (int num = 1; num <= size; num++)
+            {
+                if (IsValid(board, row, col, num))
+                {
+                    board[row, col] = num;
+                    if (Solve(board)) return true;
+                    board[row, col] = 0;
+                }
+            }
+            return false;
+        }
+
+        // Проверка корректности вставки числа
+        private static bool IsValid(int[,] board, int row, int col, int num)
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                if (board[row, i] == num || board[i, col] == num ||
+                    board[row - row % 3 + i / 3, col - col % 3 + i % 3] == num)
+                {
+                    return false;
                 }
             }
             return true;
+        }
+
+        // Проверка на наличие нескольких решений
+        private static bool HasMultipleSolutions(int[,] board)
+        {
+            int row = -1;
+            int col = -1;
+            bool isEmpty = true;
+            int size = board.GetLength(0);
+
+            for (int i = 0; i < size; i++)
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    if (board[i, j] == 0)
+                    {
+                        row = i;
+                        col = j;
+                        isEmpty = false;
+                        break;
+                    }
+                }
+                if (!isEmpty) break;
+            }
+
+            if (isEmpty) return false;
+
+            int solutionsFound = 0;
+            for (int num = 1; num <= size; num++)
+            {
+                if (IsValid(board, row, col, num))
+                {
+                    board[row, col] = num;
+                    if (Solve(board))
+                    {
+                        solutionsFound++;
+                        if (solutionsFound > 2) return true;
+                    }
+                    board[row, col] = 0;
+                }
+            }
+            return false;
         }
     }
 }

@@ -6,67 +6,140 @@ namespace ReversStudio.SUDO.Runtime.Sudoku.Field
 {
     public class FieldManager : MonoBehaviour
     {
-        public int selectedNumber = -1; 
+        public int[] selectedIndex;
+        private int _selectedNumber = -1;
 
         [HideInInspector]
         public List<CellView> cellViews;
 
+        private int[] _quantityOfNumber = new int[9];
+        
         private FieldGenerator _fieldGenerator;
 
         private int[,] _field;
+        private int[,] _userField;
 
         private List<CellView> _highlightedCells = new List<CellView>();
 
-
-        [Button]
+        private FieldVerifier _fieldVerifier;
+        
         private void Start()
         {
-            Load();
+            Init();
+            GenerateField();
         }
 
-        private void Load()
+
+        public void Init()
         {
+            _fieldVerifier = new FieldVerifier();
             _fieldGenerator = new FieldGenerator();
-            LoadField();
+            _fieldGenerator.Init(_fieldVerifier);
+            foreach (var cellView in cellViews)
+            {
+                cellView.Init(this);
+            }
         }
 
-        private void LoadField()
+        private void GenerateField()
         {
+            for (int i = 0; i < _quantityOfNumber.Length; i++)
+            {
+                _quantityOfNumber[i] = 0;
+            }
             _field = _fieldGenerator.GenerateField();
+            _userField = (int[,])_field.Clone();
             FillCells(_field);
         }
 
         private void FillCells(int[,] field)
         {
             int cellCounter = 0;
-            for (int i = 1; i < 10; i++)
+            for (int i = 0; i < 9; i++)
             {
-                for (int j = 1; j < 10; j++)
+                for (int j = 0; j < 9; j++)
                 {
-                    cellViews[cellCounter].ChangeNumber(field[i-1,j-1]);
+                    if (_field[i, j] != 0)
+                    {
+                        _quantityOfNumber[field[i, j]-1]++;
+                    }
+                    cellViews[cellCounter].LoadNumber(field[i,j],new[]{i,j});
                     cellCounter++;
                 }
             }
         }
 
-        public void HightlightCells(int number)
+        public void HighlightCells(int number)
         {
-            if (_highlightedCells != null)
-            {
-                foreach (var highlightedCell in _highlightedCells)
-                {
-                    highlightedCell.ChangeCellState(false);
-                }
-                _highlightedCells.Clear();  
-            }
-
-            _highlightedCells = cellViews.FindAll(c => c.number == number);
+            _selectedNumber = number;
+            
             foreach (var highlightedCell in _highlightedCells)
             {
-                highlightedCell.ChangeCellState(true);
+                highlightedCell.ChangeCellSelectedState(false);
+            }
+            _highlightedCells.Clear();  
+
+            _highlightedCells = cellViews.FindAll(c => c.number == _selectedNumber);
+            foreach (var highlightedCell in _highlightedCells)
+            {
+                highlightedCell.ChangeCellSelectedState(true);
             }
         }
 
+        public void TrySetNumber(CellView cell, int[] index)
+        {
+            if (_selectedNumber != -1)
+            {
+                cell.ChangeNumber(_selectedNumber);
+                _userField[index[0], index[1]] = _selectedNumber;
+                
+                _highlightedCells.Add(cell);
+                cell.ChangeCellSelectedState(true);
+                
+                _quantityOfNumber[_selectedNumber - 1]++;
+
+                CheckCompleted();
+            }
+        }
+        
+        public void RemoveNumber(CellView cell, int[] index)
+        {
+            if (_selectedNumber == cell.number)
+            {
+                cell.ResetState();
+
+                cell.ChangeNumber(0);
+                _userField[index[0], index[1]] = 0;
+                cell.ChangeCellSelectedState(false);
+                _quantityOfNumber[_selectedNumber - 1]--;
+                UnCheckCompleted();
+            }
+        }
+
+        private void CheckCompleted()
+        {
+            if (_quantityOfNumber[_selectedNumber-1] >= 9)
+            {
+                foreach (var cell in cellViews.FindAll(c=>c.number==_selectedNumber))
+                {
+                    cell.CompleteState(true);
+                }
+            }
+        }
+
+        private void UnCheckCompleted()
+        {
+            for (int i = 0; i < _quantityOfNumber.Length; i++)
+            {
+                if (_quantityOfNumber[i] < 9)
+                {
+                    foreach (var cell in cellViews.FindAll(c => c.number == i + 1))
+                    {
+                        cell.CompleteState(false);
+                    }
+                }
+            }
+        }
 
 #if UNITY_EDITOR
         [SerializeField]

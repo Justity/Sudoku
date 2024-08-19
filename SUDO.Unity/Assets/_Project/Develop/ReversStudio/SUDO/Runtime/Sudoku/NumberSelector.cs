@@ -7,10 +7,17 @@ namespace ReversStudio.SUDO.Runtime.Sudoku
     {
         [SerializeField]
         private FieldManager fieldManager;
+
+        private int _lastNumber;
     
         public void OnNumberChanged(int number)
         {
-            fieldManager.HightlightCells(number);
+            if(_lastNumber==number)
+                return;
+
+            _lastNumber = number;
+            
+            fieldManager.HighlightCells(number);
         }
     }
 }
